@@ -64,3 +64,24 @@ spec:
             initContainers:
             - name: "{{ element.name }}"           
               image: registry.io/{{ images.initContainers."{{element.name}}".path}}:{{images.initContainers."{{element.name}}".tag}}
+  - name: prepend-registry-ephemeralContainers
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    preconditions:
+      all:
+      - key: "{{request.operation || 'BACKGROUND'}}"
+        operator: AnyIn
+        value:
+        - CREATE
+        - UPDATE
+    mutate:
+      foreach:
+      - list: "request.object.spec.ephemeralContainers"
+        patchStrategicMerge:
+          spec:
+            containers:
+            - name: "{{ element.name }}"
+              image: registry.io/{{ images.ephemeralContainers."{{element.name}}".path}}:{{images.ephemeralContainers."{{element.name}}".tag}}
